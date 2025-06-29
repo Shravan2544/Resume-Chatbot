@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Chat Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #90EE90 0%, #98FB98 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(25px);
+            border-radius: 25px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.2);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+            height: calc(100vh - 30px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2E8B57 0%, #3CB371 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.05) 100%);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1.1em;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .upload-section {
+            flex: 0 0 350px;
+            padding: 25px;
+            border-right: 2px solid #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, rgba(139,69,19,0.02) 0%, rgba(210,180,140,0.02) 100%);
+        }
+
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .upload-area {
+            border: 2px dashed #8B4513;
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(139,69,19,0.08) 0%, rgba(210,180,140,0.05) 100%);
+        }
+
+        .upload-area:hover {
+            border-color: #A0522D;
+            background: linear-gradient(135deg, rgba(139,69,19,0.12) 0%, rgba(160,82,45,0.08) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(139,69,19,0.2);
+        }
+
+        .upload-area.dragover {
+            border-color: #A0522D;
+            background: linear-gradient(135deg, rgba(139,69,19,0.15) 0%, rgba(160,82,45,0.12) 100%);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3.5em;
+            color: #8B4513;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(139,69,19,0.3);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(139,69,19,0.4);
+            background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
+        }
+
+        .file-info {
+            background: linear-gradient(135deg, rgba(245,245,220,0.9) 0%, rgba(210,180,140,0.5) 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            border: 1px solid rgba(139,69,19,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, rgba(139,69,19,0.02) 0%, rgba(210,180,140,0.02) 100%);
+            backdrop-filter: blur(10px);
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #8B4513, #A0522D);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #A0522D, #8B4513);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 18px 24px;
+            border-radius: 20px;
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.6;
+            font-size: 15px;
+            position: relative;
+            animation: messageSlideIn 0.3s ease-out;
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            margin-left: auto;
+            box-shadow: 0 8px 25px rgba(139,69,19,0.25);
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant-message {
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(139,69,19,0.1);
+            margin-right: auto;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 5px;
+            white-space: pre-wrap;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .assistant-message:hover .message-actions {
+            opacity: 1;
+        }
+
+        .next-question-btn {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(139,69,19,0.3);
+        }
+
+        .next-question-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(139,69,19,0.4);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 18px 60px 18px 20px;
+            border: 2px solid rgba(139,69,19,0.2);
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(15px);
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+        }
+
+        .chat-input:focus {
+            border-color: #8B4513;
+            box-shadow: 0 0 0 4px rgba(139,69,19,0.15);
+            background: rgba(255,255,255,1);
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(139,69,19,0.3);
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 8px 25px rgba(139,69,19,0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 25px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #ffeaea;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: #27ae60;
+            background: #eafaf1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(255,107,107,0.3);
+            width: 100%;
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(135deg, #ee5a6f 0%, #ff6b6b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+            backdrop-filter: blur(20px);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close:hover {
+            color: #8B4513;
+        }
+
+        .suggested-questions {
+            margin-top: 20px;
+        }
+
+        .question-btn {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, rgba(139,69,19,0.1) 0%, rgba(210,180,140,0.1) 100%);
+            border: 2px solid rgba(139,69,19,0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .question-btn:hover {
+            background: linear-gradient(135deg, rgba(139,69,19,0.15) 0%, rgba(160,82,45,0.15) 100%);
+            border-color: #8B4513;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139,69,19,0.2);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: fit-content;
+        }
+
+        .typing-dots {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #8B4513;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .upload-section {
+                flex: none;
+                border-right: none;
+                border-bottom: 2px solid #f5f5f5;
+            }
+
+            .chat-section {
+                min-height: 400px;
+            }
+
+            .message {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Resume Chat Assistant</h1>
+            <p>Upload your resume document and get intelligent insights</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="upload-section">
+                <h3>Upload Resume Document</h3>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop your resume here or click to browse</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        Choose File
+                    </button>
+                </div>
+                
+                <div id="fileInfo" class="file-info">
+                    <h4>File uploaded successfully!</h4>
+                    <p id="fileName"></p>
+                    <p id="textPreview"></p>
+                </div>
+                
+                <button class="reset-btn" onclick="resetSession()">Reset Session</button>
+                
+                <div id="uploadError" class="error" style="display: none;"></div>
+                <div id="uploadSuccess" class="success" style="display: none;"></div>
+            </div>
+            
+            <div class="chat-section">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message assistant-message">
+                            <i class="fas fa-robot" style="color: #8B4513; margin-right: 8px;"></i>Hello! Please upload your resume document to start getting intelligent insights about your professional profile.
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="chatInput" 
+                                class="chat-input" 
+                                placeholder="Ask about your resume..."
+                                disabled
+                                rows="1"
+                            ></textarea>
+                            <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="typingIndicator" class="typing-indicator">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span style="margin-left: 10px; color: #666; font-size: 14px;">AI is thinking...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Next Questions -->
+    <div id="questionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 style="color: #8B4513; margin-bottom: 20px; font-size: 1.8em;">
+                <i class="fas fa-lightbulb" style="margin-right: 10px;"></i>Suggested Follow-up Questions
+            </h2>
+            <div class="suggested-questions" id="suggestedQuestions">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pdfUploaded = false;
+        let isTyping = false;
+
+        // File upload functionality
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const modal = document.getElementById('questionsModal');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // Auto-resize textarea
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        // Handle file upload
+        async function handleFileUpload(file) {
+            if (file.type !== 'application/pdf') {
+                showError('Please select a PDF file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showLoading('Uploading and processing PDF...');
+                
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.success) {
+                    showSuccess('PDF uploaded successfully!');
+                    document.getElementById('fileName').textContent = `File: ${result.filename}`;
+                    document.getElementById('textPreview').textContent = `Preview: ${result.text_preview}`;
+                    fileInfo.style.display = 'block';
+                    
+                    pdfUploaded = true;
+                    chatInput.disabled = false;
+                    sendBtn.disabled = false;
+                    chatInput.placeholder = "Ask a question about your resume... (Press Enter to send)";
+                    
+                    addMessage('PDF uploaded successfully! You can now ask questions about its content. Click the "Next" button after each response to see suggested follow-up questions.', 'assistant');
+                } else {
+                    showError(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                hideLoading();
+                showError('Error uploading file: ' + error.message);
+            }
+        }
+
+        // Chat functionality
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!isTyping) sendMessage();
+            }
+        });
+
+        async function sendMessage(questionText = null) {
+            const query = questionText || chatInput.value.trim();
+            if (!query || !pdfUploaded || isTyping) return;
+
+            if (!questionText) {
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+            }
+
+            addMessage(query, 'user');
+            closeModal();
+
+            try {
+                showTypingIndicator();
+                isTyping = true;
+                
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const result = await response.json();
+                hideTypingIndicator();
+                isTyping = false;
+
+                if (result.response) {
+                    addMessage(result.response, 'assistant');
+                } else {
+                    addMessage(result.error || 'Sorry, I encountered an error.', 'assistant');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                isTyping = false;
+                addMessage('Error: ' + error.message, 'assistant');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${sender}-message`);
+            
+            if (sender === 'assistant') {
+                messageDiv.innerHTML = `
+                    <div class="message-actions">
+                        <button class="next-question-btn" onclick="showSuggestedQuestions()" title="Get suggested follow-up questions">
+                            <i class="fas fa-plus"></i> Next
+                        </button>
+                    </div>
+                    <i class="fas fa-robot" style="color: #8B4513; margin-right: 8px;"></i>${text}
+                `;
+            } else {
+                messageDiv.innerHTML = `<i class="fas fa-user" style="color: white; margin-right: 8px;"></i>${text}`;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Reset session
+        async function resetSession() {
+            try {
+                await fetch('/reset', { method: 'POST' });
+                location.reload();
+            } catch (error) {
+                showError('Error resetting session: ' + error.message);
+            }
+        }
+
+        // Utility functions
+        function showError(message) {
+            const errorDiv = document.getElementById('uploadError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('uploadSuccess');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => successDiv.style.display = 'none', 3000);
+        }
+
+        function showLoading(message) {
+            // Could add upload loading indicator
+        }
+
+        function hideLoading() {
+            // Could hide upload loading indicator
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.appendChild(typingIndicator);
+            typingIndicator.style.display = 'block';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
+            if (typingIndicator.parentNode) {
+                typingIndicator.parentNode.removeChild(typingIndicator);
+            }
+        }
+
+        function showSuggestedQuestions() {
+            const questions = [
+                "What are the key strengths highlighted in this resume?",
+                "What skills should I add to make this resume more competitive?",
+                "How can I improve the formatting and structure?",
+                "What are potential weaknesses or gaps in this resume?",
+                "What type of roles would this resume be best suited for?",
+                "How does this resume compare to industry standards?",
+                "What achievements should be emphasized more?",
+                "Are there any red flags employers might notice?"
+            ];
+            
+            const questionsContainer = document.getElementById('suggestedQuestions');
+            questionsContainer.innerHTML = questions.map(q => 
+                `<button class="question-btn" onclick="sendMessage('${q.replace(/'/g, '\\&apos;')}')">\n                    <i class="fas fa-question-circle" style="color: #8B4513; margin-right: 8px;"></i>${q}\n                </button>`
+            ).join('');
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
