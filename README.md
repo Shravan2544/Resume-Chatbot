@@ -77,7 +77,7 @@ The application will be available at `http://localhost:5000`
 
 ## Requirements
 
-- Python 3.7+
+- Python 3.7
 - AWS Account with Bedrock access
 - Valid AWS credentials configured
 
